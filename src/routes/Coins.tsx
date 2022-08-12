@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import {Link} from "react-router-dom";
-import {useEffect, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
+import {fetchCoins} from "../api";
+import React from "react";
 
 
 const Container = styled.div`
@@ -24,12 +26,13 @@ const CoinsList = styled.ul`
 `;
 
 const Coin = styled.li`
-  background-color: white;
-  color: ${props => props.theme.bgColor};
+  background-color: ${(props) => props.theme.cardBgColor};
+  color: ${props => props.theme.textColor};
   margin-bottom: 10px;
   padding: 20px;
   border-radius: 15px;
   margin-bottom: 10px;
+  border: 1px solid white;
 
   a {
     //border: 1px solid red;
@@ -50,6 +53,19 @@ const Coin = styled.li`
 const Title = styled.h1`
   color: ${props => props.theme.accentColor};
   font-size: 48px;
+  //border: 1px solid red;
+`;
+
+const ThemeMode = styled.button`
+  //border: 1px solid blue;
+  margin: 10px 0px;
+  height: 40px;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 160px;
+  border: 1px solid white;
+  background-color: ${(props) => props.theme.cardBgColor};
+  color: ${props => props.theme.textColor};  
 `;
 
 const Loader = styled.span`
@@ -64,7 +80,7 @@ const Img = styled.img`
   margin-right: 10px;
 `;
 
-interface CoinInterface {
+interface ICoin {
     id: string,
     name: string,
     symbol: string,
@@ -74,31 +90,26 @@ interface CoinInterface {
     type: string,
 }
 
-function Coins() {
-    const [loading, setLoading] = useState(true);
-    const [coins, setCoins] = useState<CoinInterface[]>([]);
+interface ICoinProps {
+    toggleIsDark: () => void
+    isDark: boolean;
+}
 
-    useEffect(() => {
-        (async () => {
-            const response = await fetch("https://api.coinpaprika.com/v1/coins");
-            const json = await response.json();
-            //console.log(json.length);
-            setCoins(json.slice(0, 100));
-            //console.log(json.slice(0, 100).length)
-            setLoading(false);
-        })();
-    }, [loading]);
+function Coins({toggleIsDark, isDark}: ICoinProps) {
+    const {isLoading, data} = useQuery<ICoin[]>(["allCoins"], fetchCoins);
 
     return (
         <Container>
             <Header>
                 <Title>코인</Title>
+
             </Header>
-            {loading ? (
+            <ThemeMode onClick={toggleIsDark}>Toggle Mode</ThemeMode>
+            {isLoading ? (
                 <Loader>loading</Loader>
             ) : (
                 <CoinsList>
-                    {coins.map(coin => (
+                    {data?.slice(0, 100).map(coin => (
                         <Coin key={coin.id}>
                             <Link to={`/${coin.id}`}
                                   state={{
